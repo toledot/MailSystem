@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -68,7 +69,7 @@ func getLastBranch() *Branch {
 
 func parsePackage(words []string) error {
 	if len(words) != PackageLine {
-		return &Error{"Invaild Input"}
+		return errors.New("Invaild Input")
 	}
 
 	if packWeightTmp, errMax := strconv.ParseFloat(words[1], 32); errMax == nil || packWeightTmp < 0 {
@@ -76,7 +77,7 @@ func parsePackage(words []string) error {
 		packWeight := float32(packWeightTmp)
 
 		if packWeight < branch.MinWeight || packWeight > branch.MaxWeight {
-			return &Error{"Invaild Input"}
+			return errors.New("Invaild Input")
 		}
 
 		packageObj := Package{words[0], packWeight}
@@ -85,7 +86,7 @@ func parsePackage(words []string) error {
 		currCity.NumOfPackages += 1
 		return nil
 	}
-	return &Error{"Invaild Input"}
+	return errors.New("Invaild Input")
 }
 
 func parseBranch(words []string) (int, error) {
@@ -117,7 +118,7 @@ func parseCity(cityName string) error {
 		countryMap[cityName] = index
 		return nil
 	}
-	return &Error{"Invaild Input"}
+	return errors.New("Invaild Input")
 }
 
 func parseOp(words []string) (string, error) {
@@ -212,15 +213,20 @@ func movePackages(words []string) (string, error) {
 
 func handleLine(line, commandType string, commandSt *Stack) error {
 	words := strings.Fields(line)
+	var (
+		err error
+		str string
+		num int
+	)
 
 	if len(words) < NumberLine {
-		return &Error{"Invaild Input"}
+		return errors.New("Invaild Input")
 	}
 
 	switch commandType {
 
 	case OpStr:
-		if str, err := parseOp(words); err == nil {
+		if str, err = parseOp(words); err == nil {
 			fmt.Print(str)
 			commandSt.Pop()
 			return nil
@@ -228,16 +234,16 @@ func handleLine(line, commandType string, commandSt *Stack) error {
 
 	case CityStr:
 		if len(words) != NumberLine {
-			return &Error{"Invaild Input"}
+			return errors.New("Invaild Input")
 		}
-		if err := parseCity(words[0]); err == nil {
+		if err = parseCity(words[0]); err == nil {
 			commandSt.Pop()
 			commandSt.Push(BranchesStr)
 			return nil
 		}
 
 	case BranchStr:
-		if num, err := parseBranch(words); err == nil {
+		if num, err = parseBranch(words); err == nil {
 			commandSt.Pop()
 			for i := 0; i < num; i++ {
 				commandSt.Push(PackageStr)
@@ -246,28 +252,30 @@ func handleLine(line, commandType string, commandSt *Stack) error {
 		}
 
 	case PackageStr:
-		if err := parsePackage(words); err == nil {
+		if err = parsePackage(words); err == nil {
 			commandSt.Pop()
 			return nil
 		}
 
 	default:
 		if len(words) != NumberLine {
-			return &Error{"Invaild Input"}
+			return errors.New("Invaild Input")
 		}
 		if CitiesStr == commandType || OperationsStr == commandType || BranchesStr == commandType {
 			single := manyToOne(commandType)
-			if num, err := strconv.Atoi(words[0]); err == nil && num >= 0 {
+			if num, err = strconv.Atoi(words[0]); err == nil && num >= 0 {
 				commandSt.Pop()
 				for i := 0; i < num; i++ {
 					commandSt.Push(single)
 				}
 				return nil
+			} else if num < 0 {
+				return errors.New("Invaild Input")
 			}
 		}
 	}
 
-	return &Error{"Invaild Input"}
+	return err
 }
 
 func main() {
@@ -298,7 +306,7 @@ func main() {
 
 		err := handleLine(line, currCommand, &commandSt)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(err.Error())
 		}
 	}
 
