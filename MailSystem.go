@@ -91,18 +91,18 @@ func parsePackage(words []string) error {
 
 func parseBranch(words []string) (int, error) {
 	if len(words) != BranchLine {
-		return 0, &Error{"Invaild Input"}
+		return 0, errors.New("Invaild Input")
 	}
 	packagesNum, errNum := strconv.Atoi(words[BranchPackageNumInd])
 	minWeight, errMin := strconv.ParseFloat(words[BranchMinInd], 32)
 	maxWeight, errMax := strconv.ParseFloat(words[BranchMaxInd], 32)
 	if errNum != nil || errMin != nil || errMax != nil || packagesNum < 0 || minWeight < 0 || maxWeight < 0 || maxWeight < minWeight {
-		return 0, &Error{"Invaild Input"}
+		return 0, errors.New("Invaild Input")
 	}
 
 	currCity := getLastCity()
 	if currCity == nil {
-		return 0, &Error{"Invaild Input"}
+		return 0, errors.New("Invaild Input")
 	}
 
 	br := Branch{len(currCity.Branches), float32(minWeight), float32(maxWeight), make([]Package, 0)}
@@ -125,24 +125,24 @@ func parseOp(words []string) (string, error) {
 	switch words[0] {
 	case OpOneStr:
 		if len(words) != OpOneLine {
-			return "", &Error{"Invaild Input"}
+			return "", errors.New("Invaild Input")
 		}
 		return printCity(words[1])
 
 	case OpTwoStr:
 		if len(words) != OpTwoLine {
-			return "", &Error{"Invaild Input"}
+			return "", errors.New("Invaild Input")
 		}
 		return movePackages(words)
 
 	case OpThreeStr:
 		if len(words) != NumberLine {
-			return "", &Error{"Invaild Input"}
+			return "", errors.New("Invaild Input")
 		}
 		return printCityWithMostPack()
 	}
 
-	return "", &Error{"Invaild Input"}
+	return "", errors.New("Invaild Input")
 }
 
 func printCity(cityName string) (string, error) {
@@ -194,14 +194,14 @@ func movePackages(words []string) (string, error) {
 	srcCityInd, srcCtFind := countryMap[words[SrcCityInd]]
 	dstCityInd, dstCtFind := countryMap[words[DstCityInd]]
 	if srcBrFind != nil || dstBrFind != nil || !dstCtFind || !srcCtFind {
-		return "", &Error{"Invaild Input"}
+		return "", errors.New("Invaild Input")
 	}
 
 	srcCity := &countryArr[srcCityInd]
 	dstCity := &countryArr[dstCityInd]
 
 	if srcBr >= len(srcCity.Branches) || dstBr >= len(dstCity.Branches) || srcBr < 0 || dstBr < 0 {
-		return "", &Error{"Invaild Input"}
+		return "", errors.New("Invaild Input")
 	}
 
 	transfered := movePackagesBetweenBranches(&srcCity.Branches[srcBr], &dstCity.Branches[dstBr])
